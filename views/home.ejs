@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEISA - Livestock Event Information Data Sharing Architecture</title>
+    <!-- Add links for fonts and icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+    <!-- Add custom CSS for styling -->
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-top: 40px;
+        }
+
+        p {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+
+        .logo {
+            /* Add your logo image here as a background */
+            width: 200px;
+            height: 200px;
+            background-image: url('logo.png');
+            background-size: cover;
+            background-position: center;
+            margin: 20px auto;
+            border-radius: 50%;
+        }
+
+        .icon {
+            font-size: 48px;
+            color: #007bff;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidebar .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #111;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+        }
+
+        .openbtn:hover {
+            background-color: #444;
+        }
+
+        #main {
+            transition: margin-left .5s;
+            padding: 16px;
+        }
+
+        .container {
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .bar1,
+        .bar2,
+        .bar3 {
+            width: 35px;
+            height: 5px;
+            background-color: #333;
+            margin: 6px 0;
+            transition: 0.4s;
+        }
+
+        .change .bar1 {
+            transform: translate(0, 11px) rotate(-45deg);
+        }
+
+        .change .bar2 {
+            opacity: 0;
+        }
+
+        .change .bar3 {
+            transform: translate(0, -11px) rotate(45deg);
+        }
+        /* Horizontal Icons */
+        .key-features {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px; /* Add space between the form and icons */
+        }
+
+        .key-feature {
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 48px;
+            color: #007bff;
+            margin-right: 100px;
+            margin-left: 100px;
+        }     
+        
+        h2.centered {
+            text-align: center;
+        }
+    </style>
+
+
+    
+</head>
+
+<body>
+    <div id="mySidebar" class="sidebar">
+        <a href="#">About</a>
+        <a href="#">Services</a>
+        <a href="#">Clients</a>
+        <a href="#">Contact</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </div>
+    <div id="main">
+        <div id="menux" class="container" onclick="myFunction(this)">
+            <div class="bar1"></div>
+            <div class="bar2"></div>
+            <div class="bar3"></div>
+        </div>
+
+        <script>
+            var sidebarOpen = false; // Initialize sidebar state as closed
+
+            function openNav() {
+                document.getElementById("mySidebar").style.width = "250px";
+                document.getElementById("main").style.marginLeft = "250px";
+                sidebarOpen = true; // Sidebar is open
+            }
+
+            function closeNav() {
+                document.getElementById("mySidebar").style.width = "0";
+                document.getElementById("main").style.marginLeft = "0";
+                sidebarOpen = false; // Sidebar is closed
+            }
+            function myFunction(x) {
+                x.classList.toggle("change");
+                if (sidebarOpen)
+                    closeNav();
+                else
+                    openNav();
+            }
+        </script>
+        <header>
+            <!-- Add your logo here -->
+            <div class="logo" style="background-image: url('logo.png');"></div>
+            <h1>LEISA</h1>
+            <p>Livestock Event Information Data Sharing Architecture</p>
+        </header>
+        <div class="container">
+            <h2 class="centered">Welcome to LEISA</h2>
+            <!-- <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eget leo vitae metus sodales rhoncus eget
+            ac arcu.</p> -->
+
+            <div class="key-features">
+                <div class="key-feature">
+                    <div class="icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <p>Data Sharing</p>
+                </div>
+                <div class="key-feature">
+                    <div class="icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <p>Scalability</p>
+                </div>
+                <div class="key-feature">
+                    <div class="icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <p>Security</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
