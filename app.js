@@ -99,7 +99,7 @@ app.post('/login', (req, res, next) => {
     }
 
     if (!user) {
-      req.flash('error', 'Invalid username or password'); // Set an error flash message
+      req.flash('error', 'Invalid username or password'); // Set an error flash mess
       return res.redirect('/login');
     }
 
