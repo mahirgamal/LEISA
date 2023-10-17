@@ -11,7 +11,12 @@ const flash = require('express-flash'); // Import express-flash
 const amqp = require('amqplib');
 const axios = require('axios');
 
+const rhea = require('rhea');
+
 const path = require('path');
+
+const bodyParser = require('body-parser');
+const fs = require('fs');
 
 // Set EJS as the template engine
 app.set('view engine', 'ejs');
@@ -120,7 +125,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const { username, email, password, rabbitmq_username, rabbitmq_password } = req.body;
+    const { username, email, password } = req.body;
 
     // Validate user input (you can add more validation as needed)
     if (!username || !email || !password) {
@@ -136,37 +141,28 @@ app.post('/register', async (req, res) => {
       return res.redirect('/register');
     }
 
+    // Read the JSON file (e.g., 'config.json')
+    const configJSON = fs.readFileSync('config.json', 'utf-8');
+
+    // Parse the JSON to get the configuration object
+    const config = JSON.parse(configJSON);
+
+    // Now, you can access the configuration values like this:
+    const brokerType = config.brokerType;
+    const brokerProtocol = config.brokerProtocol;
+    const brokerHost = config.brokerHost;
+    const brokerPort = config.brokerPort;
+    const brokerUsername = config.brokerUsername;
+    const brokerPassword = config.brokerPassword;
+
     // Hash the user's password (you should use a secure hashing library like bcrypt)
     const hashedPassword = bcrypt.hashSync(password, 10);
-
-    // RabbitMQ connection information
-    const rabbitmqUsername = 'guest';
-    const rabbitmqPassword = 'guest';
-    const rabbitmqHost = 'localhost'; // Replace with your RabbitMQ server host
-    const rabbitmqPort = 5672;
-    // Generate a random queue name for the user
     const randomQueueName = generateRandomQueueName();
-
-
-
-    // Create a connection to RabbitMQ with credentials
-    const connection = await amqp.connect(`amqp://${rabbitmqUsername}:${rabbitmqPassword}@${rabbitmqHost}:${rabbitmqPort}`);
-
-    // Create a channel
-    const channel = await connection.createChannel();
-
-    // Declare the random queue
-    await channel.assertQueue(randomQueueName);
-
-    // Close the RabbitMQ connection and channel
-    await channel.close();
-    await connection.close();
-
 
 
     // Insert the user data into the database with the randomQueueName
     const sql = 'INSERT INTO users (username, email, password, queueName,rabbitmq_username,rabbitmq_password) VALUES (?, ?, ?, ?, ?, ?)';
-    const values = [username, email, hashedPassword, randomQueueName, rabbitmq_username, rabbitmq_password];
+    const values = [username, email, hashedPassword, randomQueueName, username, hashedPassword];
 
 
     pool.query(sql, values, (err, result) => {
@@ -178,7 +174,7 @@ app.post('/register', async (req, res) => {
 
       // Registration successful, you can redirect the user to a success page or login page
       req.flash('success', 'Registration successful');
-      createUser(randomQueueName, rabbitmq_username, rabbitmq_password);
+      rabbitmqCreateUser(randomQueueName, username, password);
       res.redirect('/login');
     });
   } catch (err) {
@@ -200,11 +196,12 @@ const isAuthenticated = (req, res, next) => {
 };
 
 app.get('/dashboard', isAuthenticated, (req, res) => {
-  // Assuming you have the authenticated user object available in req.user
   const user = req.user;
+  const isAdmin = user.admin === 1; // Check if the user is an admin
 
-  res.render('dashboard', { user: user });
+  res.render('dashboard', { user: user, isAdmin: isAdmin }); // Pass isAdmin to the template
 });
+
 
 app.get('/logout', (req, res) => {
   req.logout((err) => {
@@ -277,11 +274,25 @@ app.post('/update', isAuthenticated, (req, res) => {
 
 app.get('/consume', async (req, res) => {
   try {
-    rabbitmqQueue = '';
-    rabbitmqUsername = '';
-    rabbitmqPassword = '';
-    const rabbitmqHost = 'localhost'; // Replace with your RabbitMQ server host
-    const rabbitmqPort = 5672;
+
+    // Read the JSON file (e.g., 'config.json')
+    const configJSON = fs.readFileSync('config.json', 'utf-8');
+
+    // Parse the JSON to get the configuration object
+    const config = JSON.parse(configJSON);
+
+    // Now, you can access the configuration values like this:
+    const brokerType = config.brokerType;
+    const brokerProtocol = config.brokerProtocol;
+    const brokerHost = config.brokerHost;
+    const brokerPort = config.brokerPort;
+    const username = config.brokerUsername;
+    const password = config.brokerPassword;
+
+
+    brokerQueue = '';
+    brokerUsername = '';
+    brokerPassword = '';
 
     pool.promise()
       .query('SELECT * FROM users WHERE id = ?', [req.user.id])
@@ -292,19 +303,19 @@ app.get('/consume', async (req, res) => {
         }
 
         const user = rows[0];
-        rabbitmqQueue = user.queueName;
-        rabbitmqUsername = user.rabbitmq_username;
-        rabbitmqPassword = user.rabbitmq_password;
+        brokerQueue = user.queueName;
+        brokerUsername = user.rabbitmq_username;
+        brokerPassword = user.rabbitmq_password;
 
       })
-    const connection = await amqp.connect(`amqp://${rabbitmqUsername}:${rabbitmqPassword}@${rabbitmqHost}:${rabbitmqPort}`);
+    const connection = await amqp.connect(`${brokerProtocol}://${brokerUsername}:${brokerPassword}@${brokerHost}:${brokerPort}`);
     const channel = await connection.createChannel();
 
-    await channel.assertQueue(rabbitmqQueue);
+    await channel.assertQueue(brokerQueue);
 
     // Consume messages from the queue
     const messages = [];
-    channel.consume(rabbitmqQueue, (message) => {
+    channel.consume(brokerQueue, (message) => {
       if (message !== null) {
         messages.push(message.content.toString()); // Assuming messages are in plain text
         channel.ack(message);
@@ -316,7 +327,7 @@ app.get('/consume', async (req, res) => {
     setTimeout(() => {
       channel.close();
       connection.close();
-      res.render('consume', { queueName: rabbitmqQueue, messages });
+      res.render('consume', { queueName: brokerQueue, messages });
     }, 1000); // Adjust the timeout as needed to allow sufficient time for message consumption
   } catch (error) {
     console.error(error);
@@ -348,10 +359,22 @@ app.post('/publish', async (req, res) => {
 
   try {
 
-    rabbitmqUsername = '';
-    rabbitmqPassword = '';
-    const rabbitmqHost = 'localhost'; // Replace with your RabbitMQ server host
-    const rabbitmqPort = 5672;
+    // Read the JSON file (e.g., 'config.json')
+    const configJSON = fs.readFileSync('config.json', 'utf-8');
+
+    // Parse the JSON to get the configuration object
+    const config = JSON.parse(configJSON);
+
+    // Now, you can access the configuration values like this:
+    const brokerType = config.brokerType;
+    const brokerProtocol = config.brokerProtocol;
+    const brokerHost = config.brokerHost;
+    const brokerPort = config.brokerPort;
+    const username = config.brokerUsername;
+    const password = config.brokerPassword;
+
+    brokerUsername = '';
+    brokerPassword = '';
 
     pool.promise()
       .query('SELECT * FROM users WHERE id = ?', [req.user.id])
@@ -362,11 +385,11 @@ app.post('/publish', async (req, res) => {
         }
 
         const user = rows[0];
-        rabbitmqUsername = user.rabbitmq_username;
-        rabbitmqPassword = user.rabbitmq_password;
+        brokerUsername = user.rabbitmq_username;
+        brokerPassword = user.rabbitmq_password;
 
       })
-    const connection = await amqp.connect(`amqp://${rabbitmqUsername}:${rabbitmqPassword}@${rabbitmqHost}:${rabbitmqPort}`);
+    const connection = await amqp.connect(`${brokerProtocol}://${brokerUsername}:${brokerPassword}@${brokerHost}:${brokerPort}`);
     const channel = await connection.createChannel();
 
     await channel.assertQueue(queueName);
@@ -394,7 +417,43 @@ app.post('/publish', async (req, res) => {
 });
 
 
+app.get('/configuration', (req, res) => {
+  let config;
+  try {
+    // Read the JSON file (e.g., 'config.json')
+    const configJSON = fs.readFileSync('config.json', 'utf-8');
+    // Parse the JSON to get the configuration object
+    config = JSON.parse(configJSON);
+  } catch (error) {
+    console.error(`${error.message}`);
+  }
+  res.render('configuration.ejs', { config });
+});
 
+// Handle the form submission
+app.post('/configuration', (req, res) => {
+  const { brokerType, brokerProtocol, brokerHost, brokerPort, apiUrl, brokerUsername, brokerPassword } = req.body;
+
+  // Create a configuration object
+  const config = {
+    brokerType,
+    brokerProtocol,
+    brokerHost,
+    brokerPort: parseInt(brokerPort, 10),
+    apiUrl,
+    brokerUsername,
+    brokerPassword
+  };
+
+  // Convert the configuration object to JSON
+  const configJSON = JSON.stringify(config);
+
+  // Save the JSON to a file (e.g., 'config.json')
+  fs.writeFileSync('config.json', configJSON);
+
+  req.flash('success', 'Configuration saved');
+  return res.redirect('/configuration');
+});
 
 
 /******************************************** */
@@ -411,26 +470,58 @@ function generateRandomQueueName() {
   return queueName;
 }
 /******************************************* */
-async function createUser(randomQueueName, rabbitmq_username, rabbitmq_password) {
-  const rabbitmqApiBaseUrl = 'http://127.0.0.1:15672/api'; // Update with your RabbitMQ server's URL
-  const rabbitmqApiCredentials = {
-    username: 'guest',
-    password: 'guest',
-  };
-
-  const newUsername = rabbitmq_username;
-  const newPassword = rabbitmq_password;
-
+async function rabbitmqCreateUser(randomQueueName, broker_username, broker_password) {
   try {
+
+
+
+    // Read the JSON file (e.g., 'config.json')
+    const configJSON = fs.readFileSync('config.json', 'utf-8');
+
+    // Parse the JSON to get the configuration object
+    const config = JSON.parse(configJSON);
+
+    // Now, you can access the configuration values like this:
+    const brokerType = config.brokerType;
+    const brokerProtocol = config.brokerProtocol;
+    const brokerHost = config.brokerHost;
+    const brokerPort = config.brokerPort;
+    const username = config.brokerUsername;
+    const password = config.brokerPassword;
+
+    // Create a connection to RabbitMQ with credentials
+    const connection = await amqp.connect(`${brokerProtocol}://${username}:${password}@${brokerHost}:${brokerPort}`);
+
+    // Create a channel
+    const channel = await connection.createChannel();
+
+    // Declare the random queue
+    await channel.assertQueue(randomQueueName);
+
+    // Close the RabbitMQ connection and channel
+    await channel.close();
+    await connection.close();
+    console.log(`Queue ${randomQueueName} created successfully.`);
+
+    const brokerApiBaseUrl = config.apiUrl;//'http://127.0.0.1:15672/api'; // Update with your broker server's URL
+    const brokerApiCredentials = {
+      username: username,
+      password: password,
+    };
+
+    const newUsername = broker_username;
+    const newPassword = broker_password;
+
+
     // Create the user using PUT method
     const createUserResponse = await axios.put(
-      `${rabbitmqApiBaseUrl}/users/${newUsername}`,
+      `${brokerApiBaseUrl}/users/${newUsername}`,
       {
         password: newPassword,
         tags: 'management',
       },
       {
-        auth: rabbitmqApiCredentials,
+        auth: brokerApiCredentials,
       }
     );
 
@@ -442,14 +533,14 @@ async function createUser(randomQueueName, rabbitmq_username, rabbitmq_password)
 
     // Set permissions (replace with your desired permissions)
     const setPermissionsResponse = await axios.put(
-      `${rabbitmqApiBaseUrl}/permissions/${encodeURIComponent('/')}/${newUsername}`,
+      `${brokerApiBaseUrl}/permissions/${encodeURIComponent('/')}/${newUsername}`,
       {
         configure: '',
         write: '.*',
         read: `^${randomQueueName}$`,
       },
       {
-        auth: rabbitmqApiCredentials,
+        auth: brokerApiCredentials,
       }
     );
 
@@ -462,10 +553,49 @@ async function createUser(randomQueueName, rabbitmq_username, rabbitmq_password)
     console.error(`Error creating user: ${error.message}`);
   }
 }
+/********************************************** */
+
+async function qpidCreateUser(randomQueueName, broker_username, broker_password) {
+  try {
+    const qpidApiUrl = 'http://localhost:8080/qpid/api/latest/';
+    const username = 'guest';
+    const password = 'guest';
+
+    const authHeader = {
+      username,
+      password,
+    };
+
+    // Create the user JSON object with the necessary attributes
+    const user = {
+      name: username,
+      password: password,
+      type: 'ManagedUser',
+      attributes: {
+        'qpid.jms_user': username,
+        'qpid.jms_password': password,
+        // Add any other attributes you need for the user
+      },
+    };
+
+    // Send a POST request to create the user
+    const response = await axios.get(`${qpidApiUrl}user`, user, { auth: authHeader });
+
+    if (response.status === 201) {
+      console.log(`User '${username}' created successfully.`);
+    } else {
+      console.error('Failed to create the user.');
+    }
+  } catch (error) {
+    console.error('Error creating the user:', error.message);
+  }
+}
+
 
 
 // Start the server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+  qpidCreateUser("", "", "");
 });

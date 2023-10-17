@@ -181,7 +181,8 @@
         <a href="#">About</a>
         <a href="/consume">Consum</a>
         <a href="/publish">Publish</a>
-        <a href="#">Configuration</a>
+        <!-- Add your logic to conditionally show/hide the 'Configuration' link -->
+        <a href="/configuration"<% if (isAdmin) { %> style="display: block;"<% } else { %> style="display: none;"<% } %>>Configuration</a>
         <a href="#">Contact</a>
         <a href="/logout">Logout</a>
     </div>
