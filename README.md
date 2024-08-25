@@ -77,7 +77,7 @@ Each microservice is designed to perform specific tasks within the LEISA ecosyst
 - **RabbitMQ** for message brokering
 - **Azure Functions** for serverless deployments
 
-  ## Contributing
+## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
 
