@@ -18,6 +18,9 @@ The `LEISA` project (Livestock Event Information Sharing Architecture) is an arc
 - **Decoupling Producers and Consumers**: Supports independent operation and evolution of data producers and consumers, promoting scalability and flexibility.
 - **Secure Communication**: Utilizes advanced security protocols to ensure that data sharing is authorized and protected.
 
+  
+![data sharing architecture](https://github.com/user-attachments/assets/5caa46ac-8428-4577-a0be-49f01ac12520)
+
 ## Architecture
 LEISA is structured around a cloud-based microservice architecture, leveraging RESTful APIs and message brokers to enable scalable and efficient data exchange. The architecture is divided into several key layers:
 
