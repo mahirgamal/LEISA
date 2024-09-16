@@ -81,11 +81,12 @@ Each microservice is designed to perform specific tasks within the LEISA ecosyst
 - **Azure Functions** for serverless deployments
 
 ## Team
-Meet the dedicated team behind LEI2JSON:
 
-- Mahir Habib - (PhD Student)
-- Ashad Kabir - Associate Professor in Computer Science (Project Lead and Principal Supervisor)
-- Lihong Zheng - Professor in Computer Science (Co-supervisor)
+Meet the dedicated team behind LEISA:
+
+- [**Mahir Habib**](https://researchoutput.csu.edu.au/en/persons/mahir-habib) - (PhD Student)
+- [**Ashad Kabir**](https://researchoutput.csu.edu.au/en/persons/akabircsueduau) - Associate Professor in Computer Science (Project Lead and Principal Supervisor)
+- [**Lihong Zheng**](https://researchoutput.csu.edu.au/en/persons/lzhengcsueduau) - Professor in Computer Science (Co-supervisor)
 
 ## Contributing
 
