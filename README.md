@@ -80,6 +80,13 @@ Each microservice is designed to perform specific tasks within the LEISA ecosyst
 - **RabbitMQ** for message brokering
 - **Azure Functions** for serverless deployments
 
+## Team
+Meet the dedicated team behind LEI2JSON:
+
+- Mahir Habib - (PhD Student)
+- Ashad Kabir - Associate Professor in Computer Science (Project Lead and Principal Supervisor)
+- Lihong Zheng - Professor in Computer Science (Co-supervisor)
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
