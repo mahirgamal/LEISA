@@ -85,7 +85,7 @@ Each microservice is designed to perform specific tasks within the LEISA ecosyst
 Meet the dedicated team behind LEISA:
 
 - [**Mahir Habib**](https://researchoutput.csu.edu.au/en/persons/mahir-habib) - (PhD Student)
-- [**Ashad Kabir**](https://researchoutput.csu.edu.au/en/persons/akabircsueduau) - Associate Professor in Computer Science (Project Lead and Principal Supervisor)
+- [**Ashad Kabir**](https://researchoutput.csu.edu.au/en/persons/akabircsueduau) - Professor in Computer Science (Project Lead and Principal Supervisor)
 - [**Lihong Zheng**](https://researchoutput.csu.edu.au/en/persons/lzhengcsueduau) - Professor in Computer Science (Co-supervisor)
 
 ## Contributing
